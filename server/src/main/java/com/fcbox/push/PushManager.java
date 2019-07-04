@@ -11,7 +11,6 @@ import android.util.Log;
 import com.push.aidl.IPushAidlInterface;
 import com.push.aidl.IPushCallbackAidl;
 
-import java.util.ArrayList;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 
@@ -28,34 +27,22 @@ public class PushManager {
     }
 
     static final Map<String, IPushCallbackAidl> mAidlMap = new ConcurrentHashMap<>();
-    private IPushAidlInterface iPushAidlInterface;
+    private Context mContext;
+
+    public void init(Context context) {
+        this.mContext = context;
+        startService();
+    }
+
+    public void startService() {
+        Intent in = new Intent(mContext, PushService.class);
+        mContext.startService(in);//启动服务
+        Intent intent = new Intent(mContext, PushService.class);
+        mContext.bindService(intent, mDaemonConnection, Context.BIND_AUTO_CREATE);
+    }
 
     public Map<String, IPushCallbackAidl> getAidlList() {
         return mAidlMap;
-    }
-
-    public void bindServiceConnection(Context context) {
-        Intent intent = new Intent(context, PushService.class);
-        context.bindService(intent, new ServiceConnection() {
-            @Override
-            public void onServiceConnected(ComponentName name, IBinder service) {
-                iPushAidlInterface = IPushAidlInterface.Stub.asInterface(service);
-                try {
-                    iPushAidlInterface.message("tag", "server");
-                } catch (RemoteException e) {
-                    e.printStackTrace();
-                }
-            }
-
-            @Override
-            public void onServiceDisconnected(ComponentName name) {
-
-            }
-        }, Context.BIND_AUTO_CREATE);
-    }
-
-    public void push(String message) throws RemoteException {
-        iPushAidlInterface.message("tag", message);
     }
 
     public void roll(String topic, String msg) {
@@ -81,4 +68,38 @@ public class PushManager {
             roll("", count + "");
         }
     }
+
+    IPushAidlInterface mPushListener;
+
+    private ServiceConnection mDaemonConnection = new ServiceConnection() {
+        @Override
+        public void onServiceConnected(ComponentName name, IBinder service) {
+            mPushListener = IPushAidlInterface.Stub.asInterface(service);
+            try {
+                service.linkToDeath(mDeathRecipient, 0);
+            } catch (Exception e) {
+                Log.e("", "[daemon] 守护服务的死亡守护连接断开, " + e);
+            }
+        }
+
+        @Override
+        public void onServiceDisconnected(ComponentName name) {
+            mPushListener = null;
+        }
+    };
+
+    private IBinder.DeathRecipient mDeathRecipient = new IBinder.DeathRecipient() {
+        @Override
+        public void binderDied() {
+            if (mPushListener == null) {
+                return;
+            }
+            mPushListener.asBinder().unlinkToDeath(mDeathRecipient, 0);
+            mPushListener = null;
+
+            Intent intent = new Intent(mContext, PushService.class);
+            mContext.bindService(intent, mDaemonConnection, Context.BIND_AUTO_CREATE);
+            Log.e("", "binderDied() : 守护服务断开, 重连");
+        }
+    };
 }

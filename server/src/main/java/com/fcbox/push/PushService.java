@@ -1,21 +1,32 @@
 package com.fcbox.push;
 
-import android.annotation.SuppressLint;
+import android.app.AlarmManager;
+import android.app.PendingIntent;
 import android.app.Service;
+import android.app.job.JobInfo;
+import android.app.job.JobScheduler;
+import android.content.ComponentName;
+import android.content.Context;
 import android.content.Intent;
-import android.os.AsyncTask;
 import android.os.IBinder;
-import android.os.RemoteCallbackList;
 import android.os.RemoteException;
+import android.os.SystemClock;
 import android.util.Log;
 
 import com.push.aidl.IPushAidlInterface;
 import com.push.aidl.IPushCallbackAidl;
 
+/**
+ * @author: 002170
+ * @date: 2019/7/4 18:09
+ * @desc:
+ */
 public class PushService extends Service {
 
     private static final String TAG = "PushService";
-    private RemoteCallbackList<IPushCallbackAidl> callbackList = new RemoteCallbackList<>();//回调的关键（API>=17,才能使用）
+
+    private Context mContext;
+    private int JobId;
 
     public PushService() {
     }
@@ -23,24 +34,17 @@ public class PushService extends Service {
     IPushAidlInterface.Stub binder = new IPushAidlInterface.Stub() {
         @Override
         public void message(String tag, String message) throws RemoteException {
-            //beginBroadcast和finishBroadcast一定要成对出现，
-            callbackList.beginBroadcast();
-            sendMessageToAllClient(tag, message);
             Log.d(TAG, "tag=" + tag + "  message=" + message);
-            callbackList.finishBroadcast();
         }
 
         @Override
         public void registerListener(String topic, IPushCallbackAidl callback) throws RemoteException {
-            callbackList.register(callback);//注册回调listener
             Log.d(TAG, "registerListener :: " + topic);
-
             PushManager.getInstance().getAidlList().put(topic, callback);
         }
 
         @Override
         public void unregisterListener(String topic, IPushCallbackAidl callback) throws RemoteException {
-            callbackList.unregister(callback);//取消回调listener
             Log.d(TAG, "unregisterListener");
         }
     };
@@ -53,35 +57,51 @@ public class PushService extends Service {
     @Override
     public void onCreate() {
         super.onCreate();
-        AsyncTask.execute(new Runnable() {
-            @Override
-            public void run() {
-                //PushManager.getInstance().rollMore();
-            }
-        });
+        mContext = getApplicationContext();
     }
 
     @Override
     public int onStartCommand(Intent intent, int flags, int startId) {
-        return super.onStartCommand(intent, flags, startId);
+        return START_STICKY;
+    }
+
+    @Override
+    public void onTrimMemory(int level) {
+        super.onTrimMemory(level);
+        jobStartService(60 * 5 * 1000);
     }
 
     /**
-     * 发送消息给全部的client（你也可以指定发送给某个client,也可
-     * 以根据自己的业务来封装一下Bean，记得要实现Parcelable接口来序列化
+     * 设置后台拉起PushService
      *
-     * @param tag
-     * @param message
+     * @param mill 后台循环启动Service的间隔时间
      */
-    @SuppressLint("NewApi")
-    private void sendMessageToAllClient(String tag, String message) {
-        for (int i = 0; i < callbackList.getRegisteredCallbackCount(); i++) {
-            try {
-                callbackList.getBroadcastItem(i).callback(tag, message);
-            } catch (RemoteException e) {
-                e.printStackTrace();
-            }
+    private void jobStartService(long mill) {
+        if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.LOLLIPOP) {
+            Log.v(TAG, "jobStartService");
+
+            JobScheduler scheduler = (JobScheduler) getSystemService(Context.JOB_SCHEDULER_SERVICE);
+            JobInfo.Builder builder = new JobInfo.Builder(JobId++, new ComponentName(mContext,
+                    PushStartJobService.class));
+            builder.setPersisted(true);
+            builder.setPeriodic(mill);
+            //builder.setMinimumLatency(mill); // 设置JobService执行的最小延时时间
+            //builder.setOverrideDeadline(mill * 2); // 设置JobService执行的最晚时间
+            builder.setRequiredNetworkType(JobInfo.NETWORK_TYPE_ANY); //任何可用网络
+            scheduler.schedule(builder.build());
+        } else {
+            Log.v(TAG, "setNotifyWatchdog");
+            AlarmManager alarmManager = (AlarmManager) mContext.getSystemService(Context.ALARM_SERVICE);
+            Intent intent = new Intent(mContext, PushReceiver.class);
+            intent.setAction(PushReceiver.ACTION_START_SERVICE);
+            intent.setFlags(Intent.FLAG_INCLUDE_STOPPED_PACKAGES);
+
+            PendingIntent pi = PendingIntent.getBroadcast(mContext, 0, intent, PendingIntent.FLAG_UPDATE_CURRENT);
+            long timeNow = SystemClock.elapsedRealtime();
+            long nextCheckTime = timeNow + mill; //下次启动的时间
+            alarmManager.set(AlarmManager.ELAPSED_REALTIME_WAKEUP, nextCheckTime, pi);
         }
     }
+
 
 }

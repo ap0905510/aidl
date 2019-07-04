@@ -16,6 +16,7 @@ import com.push.aidl.IPushCallbackAidl;
 public class MainActivity extends AppCompatActivity {
 
     ServiceCallBack serviceCallBack;
+    Service service;
     IPushAidlInterface iPushAidlInterface;
 
     @Override
@@ -24,40 +25,55 @@ public class MainActivity extends AppCompatActivity {
         setContentView(R.layout.activity_main);
 
         serviceCallBack = new ServiceCallBack();
+        service = new Service();
+
         Intent intent = new Intent();
         intent.setComponent(new ComponentName("com.fcbox.push", "com.fcbox.push.PushService"));
-        bindService(intent, new ServiceConnection() {
-            @Override
-            public void onServiceConnected(ComponentName name, IBinder service) {
-                iPushAidlInterface = IPushAidlInterface.Stub.asInterface(service);
-                try {
-                    iPushAidlInterface.registerListener("com.fcbox.clientb", serviceCallBack);
-                } catch (RemoteException e) {
-                    e.printStackTrace();
-                }
-            }
-
-            @Override
-            public void onServiceDisconnected(ComponentName name) {
-                try {
-                    iPushAidlInterface.unregisterListener("com.fcbox.clientb", serviceCallBack);
-                } catch (RemoteException e) {
-                    e.printStackTrace();
-                }
-            }
-        }, Context.BIND_AUTO_CREATE);
+        bindService(intent, service, Context.BIND_AUTO_CREATE);
     }
+
+    class Service implements ServiceConnection {
+        @Override
+        public void onServiceConnected(ComponentName name, IBinder service) {
+            iPushAidlInterface = IPushAidlInterface.Stub.asInterface(service);
+            try {
+                iPushAidlInterface.registerListener("com.fcbox.clientb", serviceCallBack);
+            } catch (RemoteException e) {
+                e.printStackTrace();
+            }
+        }
+
+        @Override
+        public void onServiceDisconnected(ComponentName name) {
+            try {
+                iPushAidlInterface.unregisterListener("com.fcbox.clientb", serviceCallBack);
+            } catch (RemoteException e) {
+                e.printStackTrace();
+            }
+        }
+    }
+
+    private IBinder.DeathRecipient mDeathRecipient = new IBinder.DeathRecipient() {
+        @Override
+        public void binderDied() {
+            if (iPushAidlInterface == null) {
+                return;
+            }
+            iPushAidlInterface.asBinder().unlinkToDeath(mDeathRecipient, 0);
+            iPushAidlInterface = null;
+
+            Intent intent = new Intent();
+            intent.setComponent(new ComponentName("com.fcbox.push", "com.fcbox.push.PushService"));
+            bindService(intent, service, Context.BIND_AUTO_CREATE);
+            Log.e("", "binderDied() : 服务断开, 重连");
+        }
+    };
 
     class ServiceCallBack extends IPushCallbackAidl.Stub {
         @Override
         public void callback(final String tag, final String message) throws RemoteException {
-            runOnUiThread(new Runnable() {
-                @Override
-                public void run() {
-                    StringBuffer sb = new StringBuffer().append("tag=" + tag + "  message=" + message + "\n");
-                    Log.e("YW", sb.toString());
-                }
-            });
+            StringBuffer sb = new StringBuffer().append("tag=" + tag + "  message=" + message + "\n");
+            Log.e("YW", sb.toString());
         }
     }
 }
