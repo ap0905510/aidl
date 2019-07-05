@@ -15,10 +15,11 @@ public class MainActivity extends AppCompatActivity {
         setContentView(R.layout.activity_main);
 
         new PushLinker
-                    .Builder(this)
-                    .packageName(REMOTE_SERVICE_PKG)
-                    .action(REMOTE_SERVICE_ACTION)
-                    .build()
-                    .bind();
+                .Builder(this)
+                .packageName(REMOTE_SERVICE_PKG)
+                .action(REMOTE_SERVICE_ACTION)
+                .build()
+                .bind();
     }
+
 }

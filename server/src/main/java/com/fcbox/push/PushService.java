@@ -41,11 +41,15 @@ public class PushService extends Service {
         public void registerListener(String topic, IPushCallbackAidl callback) throws RemoteException {
             Log.d(TAG, "registerListener :: " + topic);
             PushManager.getInstance().getAidlList().put(topic, callback);
+//            IBinder iBinder = Stub.asInterface(binder).asBinder();
+//            iBinder.linkToDeath(mDeathRecipient, 0);
         }
 
         @Override
         public void unregisterListener(String topic, IPushCallbackAidl callback) throws RemoteException {
             Log.d(TAG, "unregisterListener");
+//            IBinder iBinder = Stub.asInterface(binder).asBinder();
+//            iBinder.unlinkToDeath(mDeathRecipient, 0);
         }
     };
 

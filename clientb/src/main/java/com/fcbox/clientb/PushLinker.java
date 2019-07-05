@@ -36,63 +36,42 @@ public final class PushLinker {
         return new IPushCallbackAidl.Stub() {
             @Override
             public void callback(String tag, String message) throws RemoteException {
-                //todo
-                Log.d(TAG, "Receive callback in client:" + message);
+                //todo 回调
+                StringBuffer sb = new StringBuffer().append("tag=" + tag + "  message=" + message);
+                Log.d(TAG, "Receive callback in client: " + sb.toString());
                 Toast.makeText(mContext, "click " + message, Toast.LENGTH_LONG).show();
             }
         };
     }
 
     private ServiceConnection createServiceConnection() {
-        return new Service();
-//        return new ServiceConnection() {
-//            @Override
-//            public void onServiceConnected(ComponentName name, IBinder service) {
-//                Log.d(TAG, "service connected.");
-//                mTransferService = IPushAidlInterface.Stub.asInterface(service);
-//                try {
-//                    mTransferService.registerListener(mPackageName, mCallback);
-//                    mTransferService.asBinder().linkToDeath(mDeathRecipient, 0);
-//                } catch (RemoteException e) {
-//                    e.printStackTrace();
-//                }
-//            }
-//
-//            @Override
-//            public void onServiceDisconnected(ComponentName name) {
-//                if (mTransferService == null) {
-//                    Log.e(TAG, "Error occur, PushService was null when service disconnected.");
-//                    return;
-//                }
-//                try {
-//                    mTransferService.unregisterListener(mPackageName, mCallback);
-//                } catch (RemoteException e) {
-//                    e.printStackTrace();
-//                }
-//                mTransferService = null;
-//            }
-//        };
-    }
-
-    class Service implements ServiceConnection {
-        @Override
-        public void onServiceConnected(ComponentName name, IBinder service) {
-            mTransferService = IPushAidlInterface.Stub.asInterface(service);
-            try {
-                mTransferService.registerListener("com.fcbox.clientb", mCallback);
-            } catch (RemoteException e) {
-                e.printStackTrace();
+        return new ServiceConnection() {
+            @Override
+            public void onServiceConnected(ComponentName name, IBinder service) {
+                Log.d(TAG, "service connected.");
+                mTransferService = IPushAidlInterface.Stub.asInterface(service);
+                try {
+                    mTransferService.registerListener(mPackageName, mCallback);
+                    mTransferService.asBinder().linkToDeath(mDeathRecipient, 0);
+                } catch (RemoteException e) {
+                    e.printStackTrace();
+                }
             }
-        }
 
-        @Override
-        public void onServiceDisconnected(ComponentName name) {
-            try {
-                mTransferService.unregisterListener("com.fcbox.clientb", mCallback);
-            } catch (RemoteException e) {
-                e.printStackTrace();
+            @Override
+            public void onServiceDisconnected(ComponentName name) {
+                if (mTransferService == null) {
+                    Log.e(TAG, "Error occur, PushService was null when service disconnected.");
+                    return;
+                }
+                try {
+                    mTransferService.unregisterListener(mPackageName, mCallback);
+                } catch (RemoteException e) {
+                    e.printStackTrace();
+                }
+                mTransferService = null;
             }
-        }
+        };
     }
 
     private IBinder.DeathRecipient mDeathRecipient = new IBinder.DeathRecipient() {
@@ -116,6 +95,7 @@ public final class PushLinker {
         Intent intent = new Intent();
         if (!Utils.isStringBlank(mAction)) {
             intent.setAction(mAction);
+            intent.setComponent(new ComponentName(mPackageName, mAction));
         } else if (!Utils.isStringBlank(mClassName)) {
             intent.setClassName(mPackageName, mClassName);
         }
