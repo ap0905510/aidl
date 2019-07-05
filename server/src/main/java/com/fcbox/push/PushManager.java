@@ -14,7 +14,8 @@ public class PushManager {
     public static final String REMOTE_SERVICE_PKG = "com.fcbox.push";
     public static final String REMOTE_SERVICE_ACTION = "com.fcbox.push.PushService";
 
-    private PushManager() {}
+    private PushManager() {
+    }
 
     private static class SingleTon {
         static final PushManager instance = new PushManager();
@@ -26,6 +27,7 @@ public class PushManager {
 
     static final Map<String, IPushCallbackAidl> mAidlMap = new ConcurrentHashMap<>();
     private Context mContext;
+    PushLinker mPushLinker;
 
     public void init(Context context) {
         this.mContext = context;
@@ -35,15 +37,21 @@ public class PushManager {
     public void startService() {
         Intent in = new Intent(mContext, PushService.class);
         mContext.startService(in);//启动服务
-        new PushLinker
+        mPushLinker = new PushLinker
                 .Builder(mContext)
                 .packageName(REMOTE_SERVICE_PKG)
                 .action(REMOTE_SERVICE_ACTION)
-                .build()
-                .bind();
+                .build();
+        mPushLinker.bind();
     }
 
-    public Map<String, IPushCallbackAidl> getAidlList() {
+    public void unbind() {
+        if (null != mPushLinker) {
+            mPushLinker.unbind();
+        }
+    }
+
+    public Map<String, IPushCallbackAidl> getAidlCallbackMap() {
         return mAidlMap;
     }
 

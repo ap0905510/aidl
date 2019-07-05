@@ -1,38 +1,47 @@
-package com.fcbox.push;
+package com.fcbox.clientb;
 
+import android.content.BroadcastReceiver;
 import android.content.Context;
 import android.content.Intent;
 import android.content.IntentFilter;
+import android.util.Log;
 
-public class PushReceiver extends AbstractReceiver {
+public class PushReceiver extends BroadcastReceiver {
+
+    private static final String REMOTE_SERVICE_PKG = "com.fcbox.push";
+    private static final String REMOTE_SERVICE_ACTION = "com.fcbox.push.PushService";
 
     public static final String ACTION_NOTIFY_PUSH_REBIND = "android.intent.action.notify.push.rebind";
 
+    private Context mContext;
+
     PushReceiver(Context txt) {
-        super(txt);
+        this.mContext = txt.getApplicationContext();
+        registerReceiver();
     }
 
-    @Override
     protected void registerReceiver() {
         //动态注册
         IntentFilter inFilter = new IntentFilter();
         inFilter.addAction(ACTION_NOTIFY_PUSH_REBIND);
-        inFilter.addAction(ACTION_BOOT);
-        inFilter.addAction(ACTION_START_SERVICE);
         mContext.registerReceiver(this, inFilter);
     }
 
-    @Override
     protected void unregisterReceiver() {
         mContext.unregisterReceiver(this);
     }
 
     @Override
     public void onReceive(Context context, Intent intent) {
-        super.onReceive(context, intent);
         switch (intent.getAction()) {
             case ACTION_NOTIFY_PUSH_REBIND:
-                //收
+                Log.d("YW", "重连");
+                new PushLinker
+                        .Builder(mContext)
+                        .packageName(REMOTE_SERVICE_PKG)
+                        .action(REMOTE_SERVICE_ACTION)
+                        .build()
+                        .bind();
                 break;
         }
     }

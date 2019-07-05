@@ -32,7 +32,7 @@ public class LinkerBinderImpl extends IPushAidlInterface.Stub implements PushLin
 
         //todo
         Log.d(TAG, "registerListener :: " + topic);
-        PushManager.getInstance().getAidlList().put(topic, callback);
+        PushManager.getInstance().getAidlCallbackMap().put(topic, callback);
     }
 
     @Override
@@ -42,6 +42,8 @@ public class LinkerBinderImpl extends IPushAidlInterface.Stub implements PushLin
         if (callback != null) {
             mCallbackList.unregister(callback);
         }
+
+        PushManager.getInstance().getAidlCallbackMap().remove(topic);
     }
 
     public void in() {

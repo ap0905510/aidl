@@ -77,8 +77,8 @@ public class PushService extends Service {
         } else {
             Log.v(TAG, "setNotifyWatchdog");
             AlarmManager alarmManager = (AlarmManager) mContext.getSystemService(Context.ALARM_SERVICE);
-            Intent intent = new Intent(mContext, PushReceiver.class);
-            intent.setAction(PushReceiver.ACTION_START_SERVICE);
+            Intent intent = new Intent(mContext, AbstractReceiver.class);
+            intent.setAction(AbstractReceiver.ACTION_START_SERVICE);
             intent.setFlags(Intent.FLAG_INCLUDE_STOPPED_PACKAGES);
 
             PendingIntent pi = PendingIntent.getBroadcast(mContext, 0, intent, PendingIntent.FLAG_UPDATE_CURRENT);

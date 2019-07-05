@@ -50,7 +50,7 @@ public final class PushLinker {
                 mTransferService = IPushAidlInterface.Stub.asInterface(service);
                 try {
                     mTransferService.registerListener(mPackageName, mCallback);
-                    mTransferService.asBinder().linkToDeath(mDeathRecipient, 0);
+//                    mTransferService.asBinder().linkToDeath(mDeathRecipient, 0);
                 } catch (RemoteException e) {
                     e.printStackTrace();
                 }

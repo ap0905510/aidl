@@ -9,10 +9,14 @@ public class MainActivity extends AppCompatActivity {
     private static final String REMOTE_SERVICE_PKG = "com.fcbox.push";
     private static final String REMOTE_SERVICE_ACTION = "com.fcbox.push.PushService";
 
+    PushReceiver pushReceiver;
+
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
+
+        pushReceiver = new PushReceiver(this);
 
         new PushLinker
                 .Builder(this)
@@ -22,4 +26,9 @@ public class MainActivity extends AppCompatActivity {
                 .bind();
     }
 
+    @Override
+    protected void onDestroy() {
+        super.onDestroy();
+        pushReceiver.unregisterReceiver();
+    }
 }

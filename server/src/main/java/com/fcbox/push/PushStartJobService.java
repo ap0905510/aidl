@@ -10,13 +10,13 @@ import android.os.Message;
 @TargetApi(21)
 public class PushStartJobService extends JobService {
     private static final String TAG = PushStartJobService.class.getSimpleName();
-    private static final int START_HUXIN_SERVER = 1;
+    private static final int START_SERVER = 1;
 
     private Handler mJobHandler = new Handler(new Handler.Callback() {
         @Override
         public boolean handleMessage(Message msg) {
             switch (msg.what) {
-                case START_HUXIN_SERVER:
+                case START_SERVER:
                     Intent intent = new Intent(getApplicationContext(), PushReceiver.class);
                     intent.setAction(PushReceiver.ACTION_START_SERVICE);
                     intent.setFlags(Intent.FLAG_INCLUDE_STOPPED_PACKAGES);
@@ -39,7 +39,7 @@ public class PushStartJobService extends JobService {
     @Override
     public boolean onStartJob(JobParameters params) {
         Message msg = mJobHandler.obtainMessage();
-        msg.what = START_HUXIN_SERVER;
+        msg.what = START_SERVER;
         msg.obj = params;
         mJobHandler.sendMessage(msg);
         return true;
@@ -47,7 +47,7 @@ public class PushStartJobService extends JobService {
 
     @Override
     public boolean onStopJob(JobParameters params) {
-        mJobHandler.removeMessages(START_HUXIN_SERVER);
+        mJobHandler.removeMessages(START_SERVER);
         return false;
     }
 }
