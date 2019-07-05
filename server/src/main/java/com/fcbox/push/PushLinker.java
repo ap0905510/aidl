@@ -19,14 +19,16 @@ public final class PushLinker {
     private String mPackageName;
     private String mAction;
     private String mClassName;
+    private Class mClazz;
     private IPushAidlInterface mTransferService;
     private IPushCallbackAidl mCallback;
 
-    private PushLinker(Context context, String packageName, String action, String className) {
+    private PushLinker(Context context, String packageName, String action, String className, Class clazz) {
         mContext = context;
         mPackageName = packageName;
         mAction = action;
         mClassName = className;
+        mClazz = clazz;
         mServiceConnection = createServiceConnection();
         mCallback = createCallback();
     }
@@ -35,7 +37,9 @@ public final class PushLinker {
         return new IPushCallbackAidl.Stub() {
             @Override
             public void callback(String tag, String message) throws RemoteException {
-                Log.d(TAG, "Receive callback in client:" + message);
+                //todo 回调 子线程
+                StringBuffer sb = new StringBuffer().append("tag=" + tag + "  message=" + message);
+                Log.d(TAG, "Receive callback in client: " + sb.toString());
             }
         };
     }
@@ -44,9 +48,11 @@ public final class PushLinker {
         return new ServiceConnection() {
             @Override
             public void onServiceConnected(ComponentName name, IBinder service) {
+                Log.d(TAG, "service connected.");
                 mTransferService = IPushAidlInterface.Stub.asInterface(service);
                 try {
                     mTransferService.registerListener(mPackageName, mCallback);
+                    mTransferService.asBinder().linkToDeath(mDeathRecipient, 0);
                 } catch (RemoteException e) {
                     e.printStackTrace();
                 }
@@ -55,7 +61,7 @@ public final class PushLinker {
             @Override
             public void onServiceDisconnected(ComponentName name) {
                 if (mTransferService == null) {
-                    Log.e(TAG, "Error occur, TransferService was null when service disconnected.");
+                    Log.e(TAG, "Error occur, PushService was null when service disconnected.");
                     return;
                 }
                 try {
@@ -69,17 +75,44 @@ public final class PushLinker {
     }
 
     /**
+     * remove remote connect service. restart bind
+     */
+    private IBinder.DeathRecipient mDeathRecipient = new IBinder.DeathRecipient() {
+        @Override
+        public void binderDied() {
+            if (mTransferService == null) {
+                return;
+            }
+            mTransferService.asBinder().unlinkToDeath(mDeathRecipient, 0);
+            mTransferService = null;
+
+            bind();
+            Log.e(TAG, "binderDied() : 服务断开, 重连");
+        }
+    };
+
+    /**
      * Connect to the remote service.
      */
     public void bind() {
         Intent intent = new Intent();
-        if (!Utils.isStringBlank(mAction)) {
+        if (!isStringBlank(mAction)) {
             intent.setAction(mAction);
-        } else if (!Utils.isStringBlank(mClassName)) {
+            // After android 7.0+, service Intent must be explicit.
+            intent.setComponent(new ComponentName(mPackageName, mAction));
+        } else if (!isStringBlank(mClassName)) {
             intent.setClassName(mPackageName, mClassName);
         }
         // After android 5.0+, service Intent must be explicit.
         intent.setPackage(mPackageName);
+        mContext.bindService(intent, mServiceConnection, Context.BIND_AUTO_CREATE);
+    }
+
+    public void bindClazz() {
+        if (null == mClazz) {
+            throw new RuntimeException("service class is empty.");
+        }
+        Intent intent = new Intent(mContext, mClazz);
         mContext.bindService(intent, mServiceConnection, Context.BIND_AUTO_CREATE);
     }
 
@@ -91,6 +124,13 @@ public final class PushLinker {
     }
 
     /**
+     * params string empty
+     */
+    static boolean isStringBlank(String str) {
+        return str == null || str.trim().length() == 0;
+    }
+
+    /**
      * Builder to create a new {@link PushLinker} instance.
      */
     public static final class Builder {
@@ -99,6 +139,7 @@ public final class PushLinker {
         private String mPackageName;
         private String mAction;
         private String mClassName;
+        private Class mClazz;
 
         public Builder(Context context) {
             mContext = context;
@@ -129,16 +170,24 @@ public final class PushLinker {
         }
 
         /**
+         * Set the class of the remote service.
+         */
+        public Builder clazz(Class clazz) {
+            mClazz = clazz;
+            return this;
+        }
+
+        /**
          * Create the {@link PushLinker} instance using the configured values.
          */
         public PushLinker build() {
-            if (Utils.isStringBlank(mPackageName)) {
+            if (isStringBlank(mPackageName)) {
                 throw new IllegalStateException("Package name required.");
             }
-            if (Utils.isStringBlank(mAction) && Utils.isStringBlank(mClassName)) {
+            if (isStringBlank(mAction) && isStringBlank(mClassName)) {
                 throw new IllegalStateException("You must set one of the action or className.");
             }
-            return new PushLinker(mContext, mPackageName, mAction, mClassName);
+            return new PushLinker(mContext, mPackageName, mAction, mClassName, mClazz);
         }
     }
 }

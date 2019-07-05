@@ -1,20 +1,18 @@
 package com.fcbox.push;
 
-import android.content.ComponentName;
 import android.content.Context;
 import android.content.Intent;
-import android.content.ServiceConnection;
-import android.os.IBinder;
 import android.os.RemoteException;
 import android.util.Log;
 
-import com.push.aidl.IPushAidlInterface;
 import com.push.aidl.IPushCallbackAidl;
 
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 
 public class PushManager {
+    public static final String REMOTE_SERVICE_PKG = "com.fcbox.push";
+    public static final String REMOTE_SERVICE_ACTION = "com.fcbox.push.PushService";
 
     private PushManager() {}
 
@@ -37,8 +35,12 @@ public class PushManager {
     public void startService() {
         Intent in = new Intent(mContext, PushService.class);
         mContext.startService(in);//启动服务
-        Intent intent = new Intent(mContext, PushService.class);
-        mContext.bindService(intent, mDaemonConnection, Context.BIND_AUTO_CREATE);
+        new PushLinker
+                .Builder(mContext)
+                .packageName(REMOTE_SERVICE_PKG)
+                .action(REMOTE_SERVICE_ACTION)
+                .build()
+                .bind();
     }
 
     public Map<String, IPushCallbackAidl> getAidlList() {
@@ -68,38 +70,4 @@ public class PushManager {
             roll("", count + "");
         }
     }
-
-    IPushAidlInterface mPushListener;
-
-    private ServiceConnection mDaemonConnection = new ServiceConnection() {
-        @Override
-        public void onServiceConnected(ComponentName name, IBinder service) {
-            mPushListener = IPushAidlInterface.Stub.asInterface(service);
-            try {
-                service.linkToDeath(mDeathRecipient, 0);
-            } catch (Exception e) {
-                Log.e("", "[daemon] 守护服务的死亡守护连接断开, " + e);
-            }
-        }
-
-        @Override
-        public void onServiceDisconnected(ComponentName name) {
-            mPushListener = null;
-        }
-    };
-
-    private IBinder.DeathRecipient mDeathRecipient = new IBinder.DeathRecipient() {
-        @Override
-        public void binderDied() {
-            if (mPushListener == null) {
-                return;
-            }
-            mPushListener.asBinder().unlinkToDeath(mDeathRecipient, 0);
-            mPushListener = null;
-
-            Intent intent = new Intent(mContext, PushService.class);
-            mContext.bindService(intent, mDaemonConnection, Context.BIND_AUTO_CREATE);
-            Log.e("", "binderDied() : 守护服务断开, 重连");
-        }
-    };
 }

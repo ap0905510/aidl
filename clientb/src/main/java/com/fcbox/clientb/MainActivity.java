@@ -7,7 +7,7 @@ public class MainActivity extends AppCompatActivity {
 
     private static final String TAG = "BindingActivity";
     private static final String REMOTE_SERVICE_PKG = "com.fcbox.push";
-    public static final String REMOTE_SERVICE_ACTION = "com.fcbox.push.PushService";
+    private static final String REMOTE_SERVICE_ACTION = "com.fcbox.push.PushService";
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -18,7 +18,6 @@ public class MainActivity extends AppCompatActivity {
                 .Builder(this)
                 .packageName(REMOTE_SERVICE_PKG)
                 .action(REMOTE_SERVICE_ACTION)
-                .className(REMOTE_SERVICE_ACTION)
                 .build()
                 .bind();
     }

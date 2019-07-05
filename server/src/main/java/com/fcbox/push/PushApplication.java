@@ -12,6 +12,4 @@ public class PushApplication extends Application {
 
     }
 
-
-
 }
