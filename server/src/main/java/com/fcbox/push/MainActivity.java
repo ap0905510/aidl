@@ -2,7 +2,9 @@ package com.fcbox.push;
 
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
+import android.util.Log;
 import android.view.View;
+import android.widget.Toast;
 
 public class MainActivity extends AppCompatActivity {
 
@@ -13,6 +15,7 @@ public class MainActivity extends AppCompatActivity {
     }
 
     public void sendMessage(View view) {
+        Log.e("YW", "xxx click");
         PushManager.getInstance().roll("xxx", "server");
     }
 }

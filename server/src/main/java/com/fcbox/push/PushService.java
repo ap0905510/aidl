@@ -8,13 +8,11 @@ import android.app.job.JobScheduler;
 import android.content.ComponentName;
 import android.content.Context;
 import android.content.Intent;
+import android.os.Handler;
 import android.os.IBinder;
-import android.os.RemoteException;
+import android.os.Looper;
 import android.os.SystemClock;
 import android.util.Log;
-
-import com.push.aidl.IPushAidlInterface;
-import com.push.aidl.IPushCallbackAidl;
 
 /**
  * @author: 002170
@@ -28,40 +26,23 @@ public class PushService extends Service {
     private Context mContext;
     private int JobId;
 
+    private Handler mHandler = new Handler(Looper.getMainLooper());
+    private PushLinkerBinder mLinkerBinder;
+
     public PushService() {
-    }
-
-    IPushAidlInterface.Stub binder = new IPushAidlInterface.Stub() {
-        @Override
-        public void message(String tag, String message) throws RemoteException {
-            Log.d(TAG, "tag=" + tag + "  message=" + message);
-        }
-
-        @Override
-        public void registerListener(String topic, IPushCallbackAidl callback) throws RemoteException {
-            Log.d(TAG, "registerListener :: " + topic);
-            PushManager.getInstance().getAidlList().put(topic, callback);
-//            IBinder iBinder = Stub.asInterface(binder).asBinder();
-//            iBinder.linkToDeath(mDeathRecipient, 0);
-        }
-
-        @Override
-        public void unregisterListener(String topic, IPushCallbackAidl callback) throws RemoteException {
-            Log.d(TAG, "unregisterListener");
-//            IBinder iBinder = Stub.asInterface(binder).asBinder();
-//            iBinder.unlinkToDeath(mDeathRecipient, 0);
-        }
-    };
-
-    @Override
-    public IBinder onBind(Intent intent) {
-        return binder;
     }
 
     @Override
     public void onCreate() {
         super.onCreate();
+        Log.d(TAG, "Service onCreate()");
         mContext = getApplicationContext();
+        mLinkerBinder = PushLinkerBinder.Factory.newBinder();
+    }
+
+    @Override
+    public IBinder onBind(Intent intent) {
+        return mLinkerBinder;
     }
 
     @Override
