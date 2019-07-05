@@ -7,7 +7,6 @@ import android.content.ServiceConnection;
 import android.os.IBinder;
 import android.os.RemoteException;
 import android.util.Log;
-import android.widget.Toast;
 
 import com.push.aidl.IPushAidlInterface;
 import com.push.aidl.IPushCallbackAidl;
@@ -36,10 +35,9 @@ public final class PushLinker {
         return new IPushCallbackAidl.Stub() {
             @Override
             public void callback(String tag, String message) throws RemoteException {
-                //todo 回调
+                //todo 回调 子线程
                 StringBuffer sb = new StringBuffer().append("tag=" + tag + "  message=" + message);
                 Log.d(TAG, "Receive callback in client: " + sb.toString());
-                Toast.makeText(mContext, "click " + message, Toast.LENGTH_LONG).show();
             }
         };
     }
@@ -74,6 +72,9 @@ public final class PushLinker {
         };
     }
 
+    /**
+     * remove remote connect service. restart bind
+     */
     private IBinder.DeathRecipient mDeathRecipient = new IBinder.DeathRecipient() {
         @Override
         public void binderDied() {
@@ -84,7 +85,7 @@ public final class PushLinker {
             mTransferService = null;
 
             bind();
-            Log.e("", "binderDied() : 服务断开, 重连");
+            Log.e(TAG, "binderDied() : 服务断开, 重连");
         }
     };
 
@@ -93,10 +94,11 @@ public final class PushLinker {
      */
     public void bind() {
         Intent intent = new Intent();
-        if (!Utils.isStringBlank(mAction)) {
+        if (!isStringBlank(mAction)) {
             intent.setAction(mAction);
+            // After android 7.0+, service Intent must be explicit.
             intent.setComponent(new ComponentName(mPackageName, mAction));
-        } else if (!Utils.isStringBlank(mClassName)) {
+        } else if (!isStringBlank(mClassName)) {
             intent.setClassName(mPackageName, mClassName);
         }
         // After android 5.0+, service Intent must be explicit.
@@ -109,6 +111,13 @@ public final class PushLinker {
      */
     public void unbind() {
         mContext.unbindService(mServiceConnection);
+    }
+
+    /**
+     * params string empty
+     */
+    static boolean isStringBlank(String str) {
+        return str == null || str.trim().length() == 0;
     }
 
     /**
@@ -153,10 +162,10 @@ public final class PushLinker {
          * Create the {@link PushLinker} instance using the configured values.
          */
         public PushLinker build() {
-            if (Utils.isStringBlank(mPackageName)) {
+            if (isStringBlank(mPackageName)) {
                 throw new IllegalStateException("Package name required.");
             }
-            if (Utils.isStringBlank(mAction) && Utils.isStringBlank(mClassName)) {
+            if (isStringBlank(mAction) && isStringBlank(mClassName)) {
                 throw new IllegalStateException("You must set one of the action or className.");
             }
             return new PushLinker(mContext, mPackageName, mAction, mClassName);

@@ -18,6 +18,7 @@ public class MainActivity extends AppCompatActivity {
                 .Builder(this)
                 .packageName(REMOTE_SERVICE_PKG)
                 .action(REMOTE_SERVICE_ACTION)
+                .className(REMOTE_SERVICE_ACTION)
                 .build()
                 .bind();
     }
