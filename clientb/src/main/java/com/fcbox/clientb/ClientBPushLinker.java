@@ -11,7 +11,7 @@ import android.util.Log;
 import com.push.aidl.IPushAidlInterface;
 import com.push.aidl.IPushCallbackAidl;
 
-public final class PushLinker {
+public final class ClientBPushLinker {
     private static final String TAG = "PushLinker";
 
     private ServiceConnection mServiceConnection;
@@ -22,8 +22,8 @@ public final class PushLinker {
     private IPushAidlInterface mTransferService;
     private IPushCallbackAidl mCallback;
 
-    private PushLinker(Context context, String packageName, String action, String className) {
-        mContext = context;
+    private ClientBPushLinker(Context context, String packageName, String action, String className) {
+        mContext = context.getApplicationContext();
         mPackageName = packageName;
         mAction = action;
         mClassName = className;
@@ -138,7 +138,7 @@ public final class PushLinker {
     }
 
     /**
-     * Builder to create a new {@link PushLinker} instance.
+     * Builder to create a new {@link ClientBPushLinker} instance.
      */
     public static final class Builder {
 
@@ -176,16 +176,16 @@ public final class PushLinker {
         }
 
         /**
-         * Create the {@link PushLinker} instance using the configured values.
+         * Create the {@link ClientBPushLinker} instance using the configured values.
          */
-        public PushLinker build() {
+        public ClientBPushLinker build() {
             if (isStringBlank(mPackageName)) {
                 throw new IllegalStateException("Package name required.");
             }
             if (isStringBlank(mAction) && isStringBlank(mClassName)) {
                 throw new IllegalStateException("You must set one of the action or className.");
             }
-            return new PushLinker(mContext, mPackageName, mAction, mClassName);
+            return new ClientBPushLinker(mContext, mPackageName, mAction, mClassName);
         }
     }
 }

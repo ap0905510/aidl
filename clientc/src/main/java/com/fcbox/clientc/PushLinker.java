@@ -78,7 +78,7 @@ public final class PushLinker {
                     return;
                 }
                 try {
-                    mTransferService.unregisterListener(mPackageName, mCallback);
+                    mTransferService.unregisterListener(mContext.getPackageName(), mCallback);
                 } catch (RemoteException e) {
                     e.printStackTrace();
                 } catch (Exception e) {

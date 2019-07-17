@@ -36,7 +36,7 @@ public class PushReceiver extends BroadcastReceiver {
         switch (intent.getAction()) {
             case ACTION_NOTIFY_PUSH_REBIND:
                 Log.d("YW", "重连");
-                new PushLinker
+                new ClientBPushLinker
                         .Builder(mContext)
                         .packageName(REMOTE_SERVICE_PKG)
                         .action(REMOTE_SERVICE_ACTION)
