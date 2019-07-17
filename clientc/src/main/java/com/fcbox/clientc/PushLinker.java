@@ -44,7 +44,6 @@ public final class PushLinker {
 
     /**
      * client send message to server
-     * @param tag
      */
     public void execute(String tag, String message) {
         try {
@@ -64,7 +63,7 @@ public final class PushLinker {
                 mTransferService = IPushAidlInterface.Stub.asInterface(service);
                 try {
                     mTransferService.registerListener(mContext.getPackageName(), mCallback);
-//                    mTransferService.asBinder().linkToDeath(mDeathRecipient, 0);
+                    mTransferService.asBinder().linkToDeath(mDeathRecipient, 0);
                 } catch (RemoteException e) {
                     e.printStackTrace();
                 } catch (Exception e) {

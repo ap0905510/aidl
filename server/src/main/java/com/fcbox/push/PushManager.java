@@ -57,12 +57,14 @@ public class PushManager {
 
     public void roll(String topic, String msg) {
         for (Map.Entry<String, IPushCallbackAidl> entry : mAidlMap.entrySet()) {
-            try {
-                Log.e("YW", "topic: " + topic + " :: " + entry.getKey() + " :: " + entry.getValue());
-                IPushCallbackAidl callBack = entry.getValue();
-                callBack.callback("tag", "---msg :: " + msg);
-            } catch (RemoteException e) {
-                e.printStackTrace();
+            if (topic.equalsIgnoreCase(entry.getKey())) {
+                try {
+                    Log.e("YW", "topic: " + topic + " :: " + entry.getKey() + " :: " + entry.getValue());
+                    IPushCallbackAidl callBack = entry.getValue();
+                    callBack.callback("tag", "---msg :: " + msg);
+                } catch (RemoteException e) {
+                    e.printStackTrace();
+                }
             }
         }
     }

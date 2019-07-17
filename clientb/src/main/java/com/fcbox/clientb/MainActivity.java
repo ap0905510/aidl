@@ -2,6 +2,7 @@ package com.fcbox.clientb;
 
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
+import android.view.View;
 
 public class MainActivity extends AppCompatActivity {
 
@@ -10,6 +11,7 @@ public class MainActivity extends AppCompatActivity {
     private static final String REMOTE_SERVICE_ACTION = "com.fcbox.push.PushService";
 
     PushReceiver pushReceiver;
+    PushLinker linker;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -18,12 +20,16 @@ public class MainActivity extends AppCompatActivity {
 
         pushReceiver = new PushReceiver(this);
 
-        new PushLinker
-                .Builder(this)
-                .packageName(REMOTE_SERVICE_PKG)
-                .action(REMOTE_SERVICE_ACTION)
-                .build()
-                .bind();
+        linker = new PushLinker
+                    .Builder(this)
+                    .packageName(REMOTE_SERVICE_PKG)
+                    .action(REMOTE_SERVICE_ACTION)
+                    .build();
+        linker.bind();
+    }
+
+    public void send(View view) {
+        linker.execute(getPackageName(), "客户端向服务端发送消息...");
     }
 
     @Override
@@ -31,4 +37,5 @@ public class MainActivity extends AppCompatActivity {
         super.onDestroy();
         pushReceiver.unregisterReceiver();
     }
+
 }

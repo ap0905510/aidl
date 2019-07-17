@@ -19,31 +19,27 @@ public class LinkerBinderImpl extends IPushAidlInterface.Stub implements PushLin
 
     @Override
     public void execute(String tag, String message) throws RemoteException {
-        Log.d(TAG, "Receive request:" + message);
+        Log.d(TAG, "Receive request: " + message);
     }
 
     @Override
     public void registerListener(String topic, IPushCallbackAidl callback) throws RemoteException {
         int pid = Binder.getCallingPid();
-        Log.d(TAG, "register callback:" + callback + " pid:" + pid);
+        Log.d(TAG, "register callback: " + callback + " pid: " + pid);
         if (callback != null) {
             mCallbackList.register(callback, pid);
+            PushManager.getInstance().getAidlCallbackMap().put(topic, callback);
         }
-
-        //todo
-        Log.d(TAG, "registerListener :: " + topic);
-        PushManager.getInstance().getAidlCallbackMap().put(topic, callback);
     }
 
     @Override
     public void unregisterListener(String topic, IPushCallbackAidl callback) throws RemoteException {
         int pid = Binder.getCallingPid();
-        Log.d(TAG, "unRegister callback:" + callback + " pid:" + pid);
+        Log.d(TAG, "unRegister callback: " + callback + " pid: " + pid);
         if (callback != null) {
             mCallbackList.unregister(callback);
+            PushManager.getInstance().getAidlCallbackMap().remove(topic);
         }
-
-        PushManager.getInstance().getAidlCallbackMap().remove(topic);
     }
 
     public void in() {
