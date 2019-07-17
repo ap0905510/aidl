@@ -15,6 +15,6 @@ public class MainActivity extends AppCompatActivity {
 
     public void sendMessage(View view) {
         Log.e("YW", "xxx click");
-        PushManager.getInstance().roll(getPackageName(), "server");
+        PushManager.getInstance().roll(/*getPackageName()*/ "com.fcbox.clientb", "server");
     }
 }

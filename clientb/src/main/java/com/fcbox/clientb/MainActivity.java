@@ -10,27 +10,22 @@ public class MainActivity extends AppCompatActivity {
     private static final String REMOTE_SERVICE_PKG = "com.fcbox.push";
     private static final String REMOTE_SERVICE_ACTION = "com.fcbox.push.PushService";
 
-    ClientPushProxy mPushProxy;
-
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
 
-        mPushProxy = new ClientPushProxy(this);
+        ClientPushProxy.getInstance().init(this);
     }
 
     public void send(View view) {
-        if (null != mPushProxy) {
-            mPushProxy.getLinker().execute(getPackageName(), "客户端向服务端发送消息...");
-        }
+        ClientPushProxy.getInstance().getLinker().execute(getPackageName(), "客户端向服务端发送消息...");
     }
 
     @Override
     protected void onDestroy() {
         super.onDestroy();
-        mPushProxy.destroy();
-        mPushProxy = null;
+        ClientPushProxy.getInstance().destroy();
     }
 
 }

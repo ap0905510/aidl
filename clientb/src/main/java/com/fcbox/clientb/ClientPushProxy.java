@@ -7,18 +7,31 @@ public class ClientPushProxy {
     private static final String REMOTE_SERVICE_PKG = "com.fcbox.push";
     private static final String REMOTE_SERVICE_ACTION = "com.fcbox.push.PushService";
 
-    PushReceiver pushReceiver;
-    ClientBPushLinker linker;
+    private PushReceiver pushReceiver;
+    private ClientBPushLinker linker;
+    private Context mContext;
 
-    public ClientPushProxy(Context context) {
-        init(context);
+    private ClientPushProxy() {
     }
 
-    private void init(Context context) {
-        pushReceiver = new PushReceiver(context);
+    private static ClientPushProxy instance;
 
+    public static ClientPushProxy getInstance() {
+        if (null == instance) {
+            instance = new ClientPushProxy();
+        }
+        return instance;
+    }
+
+    public void init(Context context) {
+        mContext = context;
+        pushReceiver = new PushReceiver(context);
+        linker();
+    }
+
+    public void linker() {
         linker = new ClientBPushLinker
-                    .Builder(context)
+                    .Builder(mContext)
                     .packageName(REMOTE_SERVICE_PKG)
                     .action(REMOTE_SERVICE_ACTION)
                     .build();

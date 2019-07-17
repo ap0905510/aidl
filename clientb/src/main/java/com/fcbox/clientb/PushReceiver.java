@@ -8,9 +8,6 @@ import android.util.Log;
 
 public class PushReceiver extends BroadcastReceiver {
 
-    private static final String REMOTE_SERVICE_PKG = "com.fcbox.push";
-    private static final String REMOTE_SERVICE_ACTION = "com.fcbox.push.PushService";
-
     public static final String ACTION_NOTIFY_PUSH_REBIND = "android.intent.action.notify.push.rebind";
 
     private Context mContext;
@@ -36,12 +33,7 @@ public class PushReceiver extends BroadcastReceiver {
         switch (intent.getAction()) {
             case ACTION_NOTIFY_PUSH_REBIND:
                 Log.d("YW", "重连");
-                new ClientBPushLinker
-                        .Builder(mContext)
-                        .packageName(REMOTE_SERVICE_PKG)
-                        .action(REMOTE_SERVICE_ACTION)
-                        .build()
-                        .bind();
+                ClientPushProxy.getInstance().linker();
                 break;
         }
     }
