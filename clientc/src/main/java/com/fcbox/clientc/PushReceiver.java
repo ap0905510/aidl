@@ -8,8 +8,8 @@ import android.util.Log;
 
 public class PushReceiver extends BroadcastReceiver {
 
-    private static final String REMOTE_SERVICE_PKG = "com.fcbox.push";
-    private static final String REMOTE_SERVICE_ACTION = "com.fcbox.push.PushService";
+    public static final String REMOTE_SERVICE_PKG = "com.fcbox.rock";
+    public static final String REMOTE_SERVICE_ACTION = "com.fcbox.rock.service.PushService";
 
     public static final String ACTION_NOTIFY_PUSH_REBIND = "android.intent.action.notify.push.rebind";
 

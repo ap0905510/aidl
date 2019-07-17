@@ -42,6 +42,20 @@ public final class PushLinker {
         };
     }
 
+    /**
+     * client send message to server
+     * @param tag
+     */
+    public void execute(String tag, String message) {
+        try {
+            mTransferService.execute(tag, message);
+        } catch (RemoteException e) {
+            e.printStackTrace();
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+    }
+
     private ServiceConnection createServiceConnection() {
         return new ServiceConnection() {
             @Override
@@ -49,7 +63,7 @@ public final class PushLinker {
                 Log.d(TAG, "service connected.");
                 mTransferService = IPushAidlInterface.Stub.asInterface(service);
                 try {
-                    mTransferService.registerListener(mPackageName, mCallback);
+                    mTransferService.registerListener(mContext.getPackageName(), mCallback);
 //                    mTransferService.asBinder().linkToDeath(mDeathRecipient, 0);
                 } catch (RemoteException e) {
                     e.printStackTrace();
