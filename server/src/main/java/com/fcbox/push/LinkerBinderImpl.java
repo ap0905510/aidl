@@ -18,7 +18,7 @@ public class LinkerBinderImpl extends IPushAidlInterface.Stub implements PushLin
     }
 
     @Override
-    public void message(String tag, String message) throws RemoteException {
+    public void execute(String tag, String message) throws RemoteException {
         Log.d(TAG, "Receive request:" + message);
     }
 

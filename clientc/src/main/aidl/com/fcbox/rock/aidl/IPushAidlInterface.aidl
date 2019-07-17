@@ -1,7 +1,7 @@
 // IPushAidlInterface.aidl
-package com.push.aidl;
+package com.fcbox.rock.aidl;
 
-import com.push.aidl.IPushCallbackAidl;
+import com.fcbox.rock.aidl.IPushCallbackAidl;
 
 // Declare any non-default types here with import statements
 
