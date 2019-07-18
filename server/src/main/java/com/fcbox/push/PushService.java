@@ -37,6 +37,8 @@ public class PushService extends Service {
         super.onCreate();
         Log.d(TAG, "Service onCreate()");
         mContext = getApplicationContext();
+        PushReceiver pushReceiver = new PushReceiver(this);
+        pushReceiver.sendBroadcastImpl(new Intent(PushReceiver.ACTION_NOTIFY_PUSH_REBIND));
         mLinkerBinder = PushLinkerBinder.Factory.newBinder();
     }
 
